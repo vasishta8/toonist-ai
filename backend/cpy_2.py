@@ -3,7 +3,7 @@ Comic Panel Composer (3x2 Grid + Narrator)
 -------------------------------------------
 This script builds a composite comic panel by:
   • Processing six individual comic panels (each with dialog text overlaid)
-    arranged in a 3‑row×2‑column grid.
+    arranged in a 3row*2column grid.
   • Adding a centered narrator text box at the bottom.
 All functionality is maintained while the code is refactored for clarity.
 """
