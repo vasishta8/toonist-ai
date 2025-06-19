@@ -8,14 +8,31 @@ from groq import Groq  # Import Groq's SDK
 import json
 import re
 load_dotenv()
-groq_api_key = os.getenv("GROQ_API_KEY")
 client = Groq(
-    api_key= groq_api_key 
+    api_key= os.getenv("GROQ_API_KEY")
 )
 
+
 def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    return match.group(0) if match else None
+    start = text.find('{')
+    if start == -1:
+        return None
+
+    stack = []
+    for i in range(start, len(text)):
+        if text[i] == '{':
+            stack.append('{')
+        elif text[i] == '}':
+            stack.pop()
+            if not stack:
+                try:
+                    json_obj = text[start:i + 1]
+                    json.loads(json_obj)  # validate it's valid JSON
+                    return json_obj
+                except json.JSONDecodeError:
+                    return None
+    return None
+
 
 def create_story_agent(topic):
     prompt = f"""Create an engaging educative comic story about {topic} with this structure:
@@ -32,13 +49,15 @@ def create_story_agent(topic):
         Panel 7: Dr. Gyaan: [Educational explanation]
     Make the scene description very long and detailed. The scene description should include all the characters present in the moment. 
     The scene should describe how the character looks every single time. We need to do image generation on these descriptions.
-    Make dialogues clear and friendly for kids and the size of a dialogue should be maximum of 20 words.
+    Make dialogues clear and friendly for kids and the size of a dialogue should be between 15 to 20 words.
+    Make sure the dialogue is atleast 15 words long. DO NOT use any words less than 15 words.
+    The story should be engaging, with dramatic scenes and kid-friendly action.
     Dr. Gyaan should explain the concept in maximum 22 words. Make sure it does not exceed 150 text-characters.
     Focus on {topic} concepts.
     Include dramatic scenes, kid-friendly action, and clear educational content."""
     
     response = client.chat.completions.create(
-        model="mixtral-8x7b-32768",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7
     )
@@ -47,7 +66,7 @@ def create_story_agent(topic):
 
 # Agent 2: JSON Formatter
 def format_json_agent(story_text):
-    prompt = """Convert this comic story into perfect JSON format:
+    prompt = """Convert this comic story into perfect JSON format. Don't change the story, just format it into JSON.:
     Use this structure:
     {
       "pages": [
@@ -77,27 +96,29 @@ def format_json_agent(story_text):
     - Keep dialogues under 20 words except Dr. Gyaan
     - Ensure valid JSON syntax
     - The scenes should be descriptive and write the physical characteristics of the characters in the scene.
-    - The dialogues should be clear and friendly for kids. Focus on {topic} concepts.
-    - Make sure the dialogues are all less than 150 text-characters in length. They should have a maximum of 20-25 words. 
+    - The dialogues should be clear and friendly for kids. Focus on concepts.
     The story is :
 
     """
     prompt += story_text
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2
     )
-    json_output= response.choices[0].message.content
-    parsed_json = json.loads(extract_json(json_output))
+    json_output = response.choices[0].message.content
+    json_str = extract_json(json_output)
+    if json_str is None:
+        raise ValueError("No valid JSON found in the response.")
+    parsed_json = json.loads(json_str)
     return parsed_json
-
 # # Main execution
-# text_input = "Matter and phases of matter (solid, liquid and gas)"
+text_input = "Teach me about the water cycle"
 
 # # Agent 1 creates story
-# story = create_story_agent(text_input)
-# print("Generated Story:\n", story)
+story = create_story_agent(text_input)
+print("Generated Story:\n", story)
 
 # # Agent 2 formats to JSON
-
+json_story = format_json_agent(story)
+print("Formatted JSON:\n", json.dumps(json_story, indent=2))
