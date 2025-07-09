@@ -19,7 +19,7 @@ def process_text():
         text = data['text']
         print(text)
         the_final(text)
-        return
+        return jsonify({"status": "success"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

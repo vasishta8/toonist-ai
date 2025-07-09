@@ -23,10 +23,12 @@ def add_text(image_path: str, dialog_text: str) -> int:
     Returns the height (in pixels) of the dialog text area that was added.
     """
 
-    # Crop the Grok-generated image to trim the black borders on the side.
+    # # Crop the Grok-generated image to trim the black borders on the side.
     
     temp_img = cv2.imread(image_path)
-    temp_two = temp_img[10: 1535, 450: 2485]
+    # temp_two = temp_img[10: 1535, 450: 2485] 
+    height, width = temp_img.shape[:2]
+    temp_two = temp_img[int(height / 16): int(13 * height / 16), 0: width]
     temp_tri = cv2.resize(temp_two, (1105, 830))
     cv2.imwrite("temp.png", temp_tri)
 
@@ -36,7 +38,7 @@ def add_text(image_path: str, dialog_text: str) -> int:
     width, height = base_img.size
     print(width, height)
     # Calculate number of text lines and dialog area height.
-    dialog_rows = math.ceil(len(dialog_text) / 54)
+    dialog_rows = math.ceil(len(dialog_text) / 54) + 1
     dialog_ht = math.ceil(width * 0.06 * dialog_rows)
 
     # Define the text panel region that will be added on top.
@@ -101,7 +103,7 @@ def wrap_text(text, max_width, font, font_scale, thickness):
     max_chars = max(1, int(max_width // char_width))
     return textwrap.wrap(text, width=max_chars)
 
-def make_panel(image_list: list[list[str]],path_name):
+def make_panel(image_list: list[list[str]], output_path: str):
     # Load base sheet image.
     page = cv2.imread("plain_sheet.png")
     page_height, page_width = page.shape[0:2]
@@ -192,19 +194,19 @@ def make_panel(image_list: list[list[str]],path_name):
         page[y0:y0 + panel_height_fixed, x0:x0 + panel_width_fixed] = panel_resized
 
     # Save the final composite image.
-    cv2.imwrite(f"{path_name}.png", page)
+    cv2.imwrite(output_path, page)
 
 # ---------------------------
 # Example Usage
 # ---------------------------
 # make_panel([
-# ["Hello"],
-# ["page_1_panel_1.png", "hello"],
-# ["page_1_panel_2.png", "hello"],
-# ["page_1_panel_3.png", "hello"],
-# ["page_1_panel_4.png", "hello"],
-# ["page_1_panel_5.png", "hello"],
-# ["page_1_panel_6.png","hello"]
+#     ["THE DAWN AWAKENS THE EPIC TALE OF HEROISM AND MYSTERY, SETTING THE STAGE FOR UNFORGETTABLE BATTLES."],
+#     ["comics_generated/trial1.png", "THE SHADOW STRIKES SILENTLY, UNLEASHING A CASCADE OF CHAOS ON THE UNWARY."],
+#     ["comics_generated/trial1.png", "WITH THE MIGHT OF THE STARS, THE HERO RISES TO DEFY THE ODDS."],
+#     ["comics_generated/trial1.png", "AN UNEXPECTED ALLIANCE IS FORMED UNDER THE SILVER GLEAM OF THE MOON."],
+#     ["comics_generated/trial1.png", "ANCIENT PROPHECIES WHISPER OF BATTLES YET TO COME."],
+#     ["comics_generated/trial1.png", "THROUGH STORMS OF FATE, THE CHOSEN ONE FORGES AHEAD."],
+#     ["comics_generated/trial1.png", "ANCIENT PROPHECIES WHISPER OF BATTLES YET TO COME.",]
 # ])
 
 # add_text("grok_sample.png", "THE SHADOW STRIKES SILENTLY, UNLEASHING A CASCADE OF CHAOS ON THE UNWARY.")

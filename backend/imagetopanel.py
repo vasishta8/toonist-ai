@@ -1,4 +1,4 @@
-from cpy_2 import make_panel
+from backend.cpy import make_panel
 import json
 
 # with open("generated_story.json", "r") as file:
