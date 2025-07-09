@@ -3,7 +3,7 @@ from langchain import LLMChain
 from langchain.prompts import PromptTemplate
 import json
 from dotenv import load_dotenv
-#from stable_paid_api import image_gen
+from stable_paid_api import image_gen
 import re
 from groq import Groq
 import os
@@ -13,8 +13,24 @@ load_dotenv()
 
 # Utility function to extract JSON object from string
 def extract_json(text):
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    return match.group(0) if match else None
+    start = text.find('{')
+    if start == -1:
+        return None
+
+    stack = []
+    for i in range(start, len(text)):
+        if text[i] == '{':
+            stack.append('{')
+        elif text[i] == '}':
+            stack.pop()
+            if not stack:
+                try:
+                    json_obj = text[start:i + 1]
+                    json.loads(json_obj)  # validate it's valid JSON
+                    return json_obj
+                except json.JSONDecodeError:
+                    return None
+    return None
 
 # Initialize Groq client
 groq_api_key = os.getenv("GROQ_API_KEY")

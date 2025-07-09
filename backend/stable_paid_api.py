@@ -15,7 +15,7 @@ def image_gen(prompt,image_path):
         data={
             "prompt": prompt,
             "output_format": "png",
-            "model":"sd3.5-large-turbo",
+            "model":"sd3.5-large",
             "aspect_ratio":"5:4"
         },
     )

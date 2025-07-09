@@ -112,6 +112,8 @@ def format_json_agent(story_text):
         raise ValueError("No valid JSON found in the response.")
     parsed_json = json.loads(json_str)
     return parsed_json
+
+'''
 # # Main execution
 text_input = "Teach me about the water cycle"
 
@@ -122,3 +124,4 @@ print("Generated Story:\n", story)
 # # Agent 2 formats to JSON
 json_story = format_json_agent(story)
 print("Formatted JSON:\n", json.dumps(json_story, indent=2))
+'''
