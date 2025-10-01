@@ -2,6 +2,7 @@ import time, os
 
 TEXT_FILE = "received_text.txt"
 
+
 def read_text_from_file():
     """Reads the latest text from the file and processes it."""
     if not os.path.exists(TEXT_FILE):
@@ -17,6 +18,7 @@ def read_text_from_file():
             return text
         return None
 
+
 if __name__ == "__main__":
     print("Listening for text updates...")
     while True:
@@ -24,4 +26,3 @@ if __name__ == "__main__":
         if text:
             print(f"Received Text: {text}")  # Process text here
             time.sleep(2)  # Wait before checking again
-

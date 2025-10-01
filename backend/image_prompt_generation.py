@@ -11,33 +11,35 @@ import os
 # Load environment variables
 load_dotenv()
 
+
 # Utility function to extract JSON object from string
 def extract_json(text):
-    start = text.find('{')
+    start = text.find("{")
     if start == -1:
         return None
 
     stack = []
     for i in range(start, len(text)):
-        if text[i] == '{':
-            stack.append('{')
-        elif text[i] == '}':
+        if text[i] == "{":
+            stack.append("{")
+        elif text[i] == "}":
             stack.pop()
             if not stack:
                 try:
-                    json_obj = text[start:i + 1]
+                    json_obj = text[start : i + 1]
                     json.loads(json_obj)  # validate it's valid JSON
                     return json_obj
                 except json.JSONDecodeError:
                     return None
     return None
 
+
 # Initialize Groq client
 groq_api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=groq_api_key)
 
 # Image prompt template
-image_prompt = '''You are tasked with generating a **detailed comic book scene description** based on the following scene text and context. The goal is to generate a **standard comic book-style image** suitable for the scene in question.
+image_prompt = """You are tasked with generating a **detailed comic book scene description** based on the following scene text and context. The goal is to generate a **standard comic book-style image** suitable for the scene in question.
 
 ### **Instructions:**
 1. **Context**: You will receive the **scene description** for the current panel in a comic book. Additionally, you will be given the **scene descriptions of previous panels** to provide the necessary context for the ongoing narrative.
@@ -69,12 +71,12 @@ image_prompt = '''You are tasked with generating a **detailed comic book scene d
 }
 
 Current scene that you need to create an image prompt for is :
-'''
+"""
 
 # PromptTemplate (if you plan to use it later)
 first_prompt = PromptTemplate(
     template=image_prompt,
-    input_variables=["current_scene", "previous_scenes", "dialogue"]
+    input_variables=["current_scene", "previous_scenes", "dialogue"],
 )
 
 # Initialize LLM (not used in this version, but shown for reference)
@@ -83,19 +85,21 @@ first_llm_chain = LLMChain(llm=llm, prompt=first_prompt)
 
 print("done till now")
 
+
 # Converts speaker + text into formatted dialogue
 def speaker_text(input_dict):
     return f"{input_dict.get('speaker', '')}: {input_dict.get('text', '')}"
 
+
 # Main processing function
 def process_json2(json_output):
-    pages = json_output.get("pages", []) 
+    pages = json_output.get("pages", [])
     previous_summary = ""
-    scene_summary_list = [] 
+    scene_summary_list = []
     output_list = []
 
     for page in pages:
-        panels = page.get("panels", []) 
+        panels = page.get("panels", [])
         panel_no = 1
         page_output_list = []
 
@@ -114,10 +118,12 @@ def process_json2(json_output):
                 tries = 0
                 while tries < 2:
                     try:
-                        response = client.chat.completions.create( 
+                        response = client.chat.completions.create(
                             model="llama-3.3-70b-versatile",
-                            messages=[{"role": "user", "content": image_prompt + prompt_input}],
-                            temperature=0.95
+                            messages=[
+                                {"role": "user", "content": image_prompt + prompt_input}
+                            ],
+                            temperature=0.95,
                         )
                         break
                     except Exception as e:
@@ -136,27 +142,31 @@ def process_json2(json_output):
                     except json.JSONDecodeError as e:
                         print(f"Failed to decode JSON: {e}")
                         continue
-                    scene_description = img_json.get('scene_description', 'No description provided')
-                    summary = img_json.get('summary', 'No summary provided')
+                    scene_description = img_json.get(
+                        "scene_description", "No description provided"
+                    )
+                    summary = img_json.get("summary", "No summary provided")
                 except Exception as e:
                     print(f"Error parsing JSON: {e}")
                     continue
 
-                scene_summary_list.append({
-                    'scene': scene_description,
-                    'summary': summary
-                })
+                scene_summary_list.append(
+                    {"scene": scene_description, "summary": summary}
+                )
 
                 image_path = f"page_{page['page_number']}_panel_{panel_no}"
-                full_prompt = "Generate an image based on this scene description: " + scene_description
+                full_prompt = (
+                    "Generate an image based on this scene description: "
+                    + scene_description
+                )
                 print(full_prompt)
-                #image_gen(full_prompt, image_path)
+                # image_gen(full_prompt, image_path)
                 previous_summary = summary
 
             panel_output = {
                 "panel_number": panel_no,
-                "dialogue": panel.get('dialogue', {}),
-                "image_path": image_path
+                "dialogue": panel.get("dialogue", {}),
+                "image_path": image_path,
             }
             page_output_list.append(panel_output)
             panel_no += 1
@@ -166,8 +176,9 @@ def process_json2(json_output):
     print(output_list)
     return scene_summary_list
 
-#Example usage (uncomment and provide valid JSON to test):
+
+# Example usage (uncomment and provide valid JSON to test):
 with open("backend/comic_story_4.json", "r") as file:
-     json_output = json.load(file)
+    json_output = json.load(file)
 scenes_summaries = process_json2(json_output)
 print(scenes_summaries)

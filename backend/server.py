@@ -6,17 +6,17 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-PDF_FOLDER = os.path.abspath('.')  # Adjust if your PDFs are elsewhere
+PDF_FOLDER = os.path.abspath(".")  # Adjust if your PDFs are elsewhere
 
 
-@app.route('/process', methods=['POST'])
+@app.route("/process", methods=["POST"])
 def process_text():
     try:
         data = request.get_json()
-        if not data or 'text' not in data:
+        if not data or "text" not in data:
             return jsonify({"error": "Invalid input"}), 400
 
-        text = data['text']
+        text = data["text"]
         print(text)
         the_final(text)
         return jsonify({"status": "success"}), 200
@@ -25,22 +25,22 @@ def process_text():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route('/fetch_pdf', methods=['POST'])
+@app.route("/fetch_pdf", methods=["POST"])
 def fetch_pdf():
-    pdf_filename = 'dummy.pdf'
+    pdf_filename = "dummy.pdf"
     # Check if file exists
     if not os.path.exists(os.path.join(PDF_FOLDER, pdf_filename)):
-        return jsonify({'error': 'PDF not found'}), 404
-    
+        return jsonify({"error": "PDF not found"}), 404
+
     # Return URL for the frontend to use
-    return jsonify({
-        'pdf_url': f'http://127.0.0.1:5000/pdf/{pdf_filename}'
-    })
+    return jsonify({"pdf_url": f"http://127.0.0.1:5000/pdf/{pdf_filename}"})
+
 
 # Add this route to serve the PDF file
-@app.route('/pdf/dummy.pdf')
+@app.route("/pdf/dummy.pdf")
 def serve_pdf(filename):
     return send_from_directory(PDF_FOLDER, filename)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)

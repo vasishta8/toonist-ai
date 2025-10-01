@@ -1,32 +1,32 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq  # Import Groq's SDK
+
 # from langchain_groq import ChatGroq
 # from langchain import LLMChain
 # from langchain.prompts import PromptTemplate
 # from imagegeneration import generate_image
 import json
 import re
+
 load_dotenv()
-client = Groq(
-    api_key= os.getenv("GROQ_API_KEY")
-)
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
 def extract_json(text):
-    start = text.find('{')
+    start = text.find("{")
     if start == -1:
         return None
 
     stack = []
     for i in range(start, len(text)):
-        if text[i] == '{':
-            stack.append('{')
-        elif text[i] == '}':
+        if text[i] == "{":
+            stack.append("{")
+        elif text[i] == "}":
             stack.pop()
             if not stack:
                 try:
-                    json_obj = text[start:i + 1]
+                    json_obj = text[start : i + 1]
                     json.loads(json_obj)  # validate it's valid JSON
                     return json_obj
                 except json.JSONDecodeError:
@@ -55,14 +55,15 @@ def create_story_agent(topic):
     Dr. Gyaan should explain the concept in maximum 22 words. Make sure it does not exceed 150 text-characters.
     Focus on {topic} concepts.
     Include dramatic scenes, kid-friendly action, and clear educational content."""
-    
+
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
+        temperature=0.7,
     )
 
     return response.choices[0].message.content
+
 
 # Agent 2: JSON Formatter
 def format_json_agent(story_text):
@@ -104,7 +105,7 @@ def format_json_agent(story_text):
     response = client.chat.completions.create(
         model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
-        temperature=0.2
+        temperature=0.2,
     )
     json_output = response.choices[0].message.content
     json_str = extract_json(json_output)
@@ -113,7 +114,8 @@ def format_json_agent(story_text):
     parsed_json = json.loads(json_str)
     return parsed_json
 
-'''
+
+"""
 # # Main execution
 text_input = "Teach me about the water cycle"
 
@@ -124,4 +126,4 @@ print("Generated Story:\n", story)
 # # Agent 2 formats to JSON
 json_story = format_json_agent(story)
 print("Formatted JSON:\n", json.dumps(json_story, indent=2))
-'''
+"""
